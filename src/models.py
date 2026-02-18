@@ -14,8 +14,16 @@ class Plan(BaseModel):
     tasks: list[Task]
 
 
+class ResearchResult(BaseModel):
+    section_title: str
+    sources: list[str]
+    key_findings: list[str]
+
+
 class State(TypedDict):
     topic: str
     plan: Plan
+    feedback: str
+    research: Annotated[List[ResearchResult], operator.add]
     sections: Annotated[List[str], operator.add]
     final: str

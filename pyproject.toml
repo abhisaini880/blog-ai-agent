@@ -7,4 +7,6 @@ dependencies = [
     "langchain-openai",
     "langchain-core",
     "python-dotenv",
+    "tavily",
+    "loguru"
 ]
