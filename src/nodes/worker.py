@@ -1,5 +1,6 @@
 from src.llm import LLM
 from langchain_core.messages import SystemMessage, HumanMessage
+from src.models import Section
 
 
 def worker(payload: dict) -> dict:
@@ -50,4 +51,7 @@ def worker(payload: dict) -> dict:
         ]
     ).content.strip()
 
-    return {"sections": [section], "token_usage": llm.usage}
+    return {
+        "sections": [Section(title=task.title, content=section)],
+        "token_usage": llm.usage,
+    }

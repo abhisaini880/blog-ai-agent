@@ -1,11 +1,12 @@
 import sys
 import uuid
+import asyncio
 from src.graph import build_graph
 from langgraph.types import Command
 from collections import defaultdict
 
 
-def main():
+async def main():
     if len(sys.argv) > 1:
         topic = sys.argv[1]
     else:
@@ -14,9 +15,9 @@ def main():
     config = {"configurable": {"thread_id": str(uuid.uuid4())}}
 
     app = build_graph()
-    app.invoke({"topic": topic}, config=config)
+    await app.ainvoke({"topic": topic}, config=config)
 
-    state = app.get_state(config)
+    state = await app.aget_state(config)
     while state.next:
         interrupt_value = state.tasks[0].interrupts[0].value
         print(f"\n{'='*50}")
@@ -31,15 +32,12 @@ def main():
         else:
             resume_value = {"action": "reject", "feedback": user_input}
 
-        app.invoke(Command(resume=resume_value), config=config)
+        await app.ainvoke(Command(resume=resume_value), config=config)
 
-        state = app.get_state(config)
+        state = await app.aget_state(config)
 
-    final_state = app.get_state(config)
+    final_state = await app.aget_state(config)
     token_usage = final_state.values.get("token_usage", [])
-
-    total_input = sum(t.input_tokens for t in token_usage)
-    total_output = sum(t.output_tokens for t in token_usage)
 
     print(f"\n{'='*50}")
     print("Blog generation complete!")
@@ -65,6 +63,6 @@ if __name__ == "__main__":
     from time import time
 
     start_time = time()
-    main()
+    asyncio.run(main())
     end_time = time()
     print(f"\nTotal execution time: {end_time - start_time:.2f} seconds")

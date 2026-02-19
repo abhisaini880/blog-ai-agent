@@ -39,6 +39,14 @@ def orchestrator(state: State) -> dict:
                     Section briefs should describe the KEY ARGUMENT, not just the topic.
                     Good: "Explain why event sourcing solves the dual-write problem with a payment system example"
                     Bad: "Discuss event sourcing"
+
+                    For each section, decide:
+                    - needs_research: True if it requires current data, specific tools/versions, 
+                    benchmarks, or recent developments. False for conceptual explanations, 
+                    analogies, or opinion-based sections.
+                    - needs_image: True if the section describes an architecture, workflow, 
+                    data flow, or comparison that benefits from a visual. False for 
+                    narrative sections, introductions, or conclusions.
                 """
             ),
             HumanMessage(content=prompt),

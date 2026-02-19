@@ -9,7 +9,12 @@ def plan_review(state: State) -> Command:
         {
             "question": "Review the blog plan:",
             "plan": f"Title: {plan.blog_title}\n\nSections:\n"
-            + "\n".join([f"- {t.title}: {t.brief}" for t in plan.tasks]),
+            + "\n\n".join(
+                [
+                    f"- Title: {t.title}\n Brief: {t.brief} \n Requires Research: {t.needs_research} \n Requires Image: {t.needs_image}"
+                    for t in plan.tasks
+                ]
+            ),
         }
     )
 

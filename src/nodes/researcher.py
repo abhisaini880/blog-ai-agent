@@ -14,14 +14,9 @@ def researcher(payload: dict) -> dict:
     messages = [
         SystemMessage(
             content="""You are a research assistant gathering information for a blog section.
-                You have access to a web_search tool for finding current information.
-                
-                - If the topic requires recent data, statistics, or specific technical details, 
-                use web_search to find 2-3 high-quality sources.
-                - If the topic is well-established and you're confident in your knowledge, 
-                you may respond directly without searching.
-                - Always prefer searching when the topic involves specific tools, versions, 
-                benchmarks, or recent developments."""
+                    Use the web_search tool to find 2-3 high-quality, recent sources.
+                    Focus on authoritative sources: official docs, reputable tech blogs, 
+                    conference talks, or peer-reviewed content. Avoid forums, Q&A sites, or outdated content."""
         ),
         HumanMessage(
             content=f"Research the topic '{task.title}' ({task.brief}) for a technical blog about '{topic}'. "

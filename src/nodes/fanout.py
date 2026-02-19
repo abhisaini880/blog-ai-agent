@@ -7,14 +7,15 @@ def fanout_to_researchers(state: State) -> List[Send]:
     tasks = state["plan"].tasks
     send_objs = []
     for task in tasks:
-        obj = Send(
-            node="researcher",
-            arg={
-                "topic": state["topic"],
-                "task": task,
-            },
-        )
-        send_objs.append(obj)
+        if task.needs_research:
+            obj = Send(
+                node="researcher",
+                arg={
+                    "topic": state["topic"],
+                    "task": task,
+                },
+            )
+            send_objs.append(obj)
     return send_objs
 
 
