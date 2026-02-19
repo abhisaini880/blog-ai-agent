@@ -1,16 +1,15 @@
-from src.llm import get_llm
+from src.llm import LLM
 from src.models import ResearchResult
 from src.tools.search import web_search
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage
-from loguru import logger
 
 
 def researcher(payload: dict) -> dict:
     task = payload["task"]
     topic = payload["topic"]
 
-    llm = get_llm()
-    llm_with_tools = llm.bind_tools([web_search])
+    llm = LLM(node_name="researcher")
+    llm_with_tools = llm.with_tools([web_search])
 
     messages = [
         SystemMessage(
@@ -31,7 +30,6 @@ def researcher(payload: dict) -> dict:
     ]
 
     response = llm_with_tools.invoke(messages)
-    logger.info(f"Initial LLM response: {response}")
 
     while response.tool_calls:
         messages.append(response)
@@ -44,8 +42,7 @@ def researcher(payload: dict) -> dict:
 
     raw_research = response.content
 
-    structured_llm = llm.with_structured_output(ResearchResult)
-    research_result = structured_llm.invoke(
+    research_result = llm.invoke_structured(
         [
             SystemMessage(
                 content="Extract the research findings into a structured format. "
@@ -54,7 +51,8 @@ def researcher(payload: dict) -> dict:
             HumanMessage(
                 content=f"Section title: {task.title}\n\nRaw research:\n{raw_research}"
             ),
-        ]
+        ],
+        ResearchResult,
     )
 
-    return {"research": [research_result]}
+    return {"research": [research_result], "token_usage": llm.usage}

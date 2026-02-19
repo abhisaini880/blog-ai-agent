@@ -1,10 +1,10 @@
-from src.llm import get_llm
+from src.llm import LLM
 from src.models import Plan, State
 from langchain_core.messages import SystemMessage, HumanMessage
 
 
 def orchestrator(state: State) -> dict:
-    llm = get_llm()
+    llm = LLM(node_name="orchestrator")
     feedback = state.get("feedback")
     topic = state["topic"]
 
@@ -21,21 +21,28 @@ def orchestrator(state: State) -> dict:
     else:
         prompt = f"Create a blog post plan for the topic: {topic}"
 
-    plan = llm.with_structured_output(Plan).invoke(
+    plan = llm.invoke_structured(
         [
             SystemMessage(
-                content="""
-                    You are an expert technical blog post planner.
-                    Given a topic, create a structured plan with 5-7 sections.
-                    Rules:
-                    - First section should be an engaging introduction (not titled "Introduction")
-                    - Last section should be a practical takeaway or conclusion
-                    - Each section brief should describe the KEY POINT to convey, not just the topic
-                    - Briefs should be 1-2 sentences max
-                    - The blog title should be compelling and specific, not generic
+                content="""You are a senior technical writer who publishes on Medium.
+                    Given a topic, create a blog plan with 5-7 sections.
+
+                    Structure rules:
+                    - Open with a hook: a bold claim, a question, or a relatable problem
+                    - DO NOT title the first section "Introduction" — use something specific
+                    - Each middle section should make ONE clear point with a concrete example
+                    - End with actionable takeaways, not a generic "Conclusion"
+                    - The blog title should be specific and curiosity-driven
+                    Good: "Why Your Microservices Are Failing (And It's Not the Architecture)"
+                    Bad: "An Overview of Microservices Architecture"
+
+                    Section briefs should describe the KEY ARGUMENT, not just the topic.
+                    Good: "Explain why event sourcing solves the dual-write problem with a payment system example"
+                    Bad: "Discuss event sourcing"
                 """
             ),
             HumanMessage(content=prompt),
-        ]
+        ],
+        Plan,
     )
-    return {"plan": plan, "feedback": ""}
+    return {"plan": plan, "feedback": "", "token_usage": llm.usage}

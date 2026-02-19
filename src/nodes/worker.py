@@ -1,10 +1,9 @@
-from src.models import State
-from src.llm import get_llm
+from src.llm import LLM
 from langchain_core.messages import SystemMessage, HumanMessage
 
 
 def worker(payload: dict) -> dict:
-    llm = get_llm()
+    llm = LLM(node_name="worker")
     task = payload["task"]
     plan = payload["plan"]
     topic = payload["topic"]
@@ -21,17 +20,24 @@ def worker(payload: dict) -> dict:
     section = llm.invoke(
         [
             SystemMessage(
-                content="""
-                    You are an expert technical blog writer.
-                    Write a section for a blog post in markdown format.
+                content="""You are a senior engineer who writes popular Medium blog posts.
+                    Write a section for a technical blog post.
 
-                    Rules:
-                    - Write 150-250 words for this section
-                    - Use a conversational but authoritative tone
-                    - Include concrete examples where relevant
-                    - Use subheadings (##) only if the section needs subdivision
-                    - Do NOT use filler phrases like "In today's world" or "It's important to note"
-                    - Incorporate the provided research sources with inline citations as [Source Title](URL)
+                    Writing style:
+                    - Short paragraphs (2-3 sentences max)
+                    - Start the section with a bold statement or insight, not a definition
+                    - Use "you" to address the reader directly
+                    - Use **bold** for key terms on first mention
+                    - Include at least one concrete example, code snippet, or analogy
+                    - Use transitional phrases between paragraphs
+                    - Avoid: "In today's world", "It's worth noting", "In conclusion",
+                    "Let's dive in", "As we all know", "In this section"
+                    - Write like you're explaining to a smart colleague over coffee
+
+                    Length: 300 words for this section.
+
+                    If research sources are provided, cite them naturally inline as
+                    [Source Title](URL) — don't dump all links at the end.
                 """
             ),
             HumanMessage(
@@ -44,4 +50,4 @@ def worker(payload: dict) -> dict:
         ]
     ).content.strip()
 
-    return {"sections": [section]}
+    return {"sections": [section], "token_usage": llm.usage}

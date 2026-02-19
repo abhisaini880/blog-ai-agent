@@ -9,4 +9,5 @@ dependencies = [
     "python-dotenv",
     "tavily",
     "loguru"
+    "langchain-mcp-adapters"
 ]

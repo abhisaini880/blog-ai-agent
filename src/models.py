@@ -3,6 +3,13 @@ from typing import TypedDict, List, Annotated
 import operator
 
 
+class TokenUsage(BaseModel):
+    node: str
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+
+
 class Task(BaseModel):
     id: int
     title: str
@@ -27,3 +34,4 @@ class State(TypedDict):
     research: Annotated[List[ResearchResult], operator.add]
     sections: Annotated[List[str], operator.add]
     final: str
+    token_usage: Annotated[List[TokenUsage], operator.add]
