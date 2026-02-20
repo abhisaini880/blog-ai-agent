@@ -1,4 +1,4 @@
-# AI Blog Agent
+# Inkwell
 
 An AI-powered blog generation agent built with LangGraph. Takes a software engineering topic and generates a well-researched technical blog post with diagrams, citations, and real sources.
 
@@ -20,31 +20,36 @@ Topic: "Event Driven Architecture in Microservices"
 
 ## Architecture
 
-```
-START
-  |
-  v
-orchestrator -----> plan_review (human approves/rejects)
-  |                      |
-  | (reject + feedback)  | (approve)
-  |<---------------------+
-                         |
-                         v
-               pre_research (conditional fan-out)
-              /      |       \
-         researcher  ...  researcher    (parallel web search)
-              \      |       /
-               research_done (fan-in)
-              /      |       \
-         worker      ...    worker      (parallel writing)
-              \      |       /
-            image_generator (sequential, shared canvas)
-                  |
-                  v
-               reducer (combine sections + images)
-                  |
-                  v
-                 END --> output/blog_post.md
+```mermaid
+flowchart TD
+    START((__start__)) --> topic_guard
+
+    topic_guard -->|valid topic| orchestrator
+    topic_guard -->|invalid topic| END((__end__))
+
+    orchestrator --> plan_review
+
+    plan_review -->|"⏸ awaiting human approval"| plan_review
+    plan_review -->|approved| pre_research
+    plan_review -->|rejected + feedback| orchestrator
+
+    pre_research -->|fanout| researcher
+    pre_research -->|no research needed| research_done
+
+    researcher --> research_done
+    research_done -->|fanout| worker
+
+    worker --> image_generator
+    image_generator --> reducer
+    reducer --> evaluator
+
+    evaluator -->|quality ok| END
+    evaluator -->|needs improvement| rewriter
+    rewriter --> evaluator
+
+    style plan_review fill:#fff3cd,stroke:#ffc107
+    style START fill:#e8f5e9,stroke:#4caf50
+    style END fill:#fce4ec,stroke:#e91e63
 ```
 
 ## Tech Stack
@@ -132,30 +137,29 @@ cp .env.example .env
 
 ## Usage
 
+### Streamlit UI (Recommended)
+
+```bash
+streamlit run ui/app.py
+```
+
+Opens at `http://localhost:8501` by default.
+
+To run on a custom port:
+
+```bash
+streamlit run ui/app.py --server.port 8502
+```
+
+To make the port permanent, create `.streamlit/config.toml`:
+
+```toml
+[server]
+port = 8502
+```
+
+### CLI
+
 ```bash
 python -m src.runner "Event Driven Architecture in Microservices"
 ```
-
-## Build Phases
-
-This project is built iteratively, each phase adding new LangGraph concepts:
-
-| Phase | What's Added | LangGraph Concepts |
-|-------|--------------|--------------------|
-| 1 | Project setup + linear chain | StateGraph, TypedDict, edges, compile, invoke |
-| 2 | Parallel workers | Send, conditional edges, reducer annotations |
-| 3 | Web research + citations | @tool, bind_tools, tool-calling loop |
-| 4 | Human review | interrupt(), Command, checkpointer, thread_id |
-| 5 | Image generation + token tracking | MCP tools, async nodes, multi-modal state |
-| 6 | Quality loop | Sub-graphs, cycles, LLM-as-judge |
-| 7 | Streamlit UI | Streaming, SQLite persistence, session management |
-
-## Current Progress
-
-- [x] Phase 1: Project setup + linear chain
-- [x] Phase 2: Parallel fan-out/fan-in workers
-- [x] Phase 3: Tavily research + citations
-- [x] Phase 4: Human-in-the-loop review
-- [x] Phase 5: Excalidraw image generation + token tracking
-- [ ] Phase 6: Quality evaluation loop
-- [ ] Phase 7: Streamlit UI + history + PDF export

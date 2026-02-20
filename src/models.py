@@ -33,9 +33,22 @@ class ResearchResult(BaseModel):
     key_findings: list[str]
 
 
+class TopicCheck(BaseModel):
+    is_technical: bool
+    reason: str = Field(description="One-sentence explanation if rejected")
+
+
+class EvalResult(BaseModel):
+    score: int = Field(description="Quality score 1-10")
+    passed: bool = Field(description="True if score >= 7")
+    feedback: str = Field(
+        description="Specific improvement suggestions if not passed, empty string if passed"
+    )
+
+
 class DiagramSpec(BaseModel):
     mermaid_code: str = Field(description="Valid Mermaid diagram syntax")
-    alt_text: str = Field(description="Descriptive alt text for the diagram")
+    alt_text: str = Field(description="Short alt text, max 8 words")
 
 
 class ImageResult(BaseModel):
@@ -51,10 +64,13 @@ class Section(BaseModel):
 
 class State(TypedDict):
     topic: str
+    topic_error: str
     plan: Plan
     feedback: str
     research: Annotated[List[ResearchResult], operator.add]
     sections: Annotated[List[Section], operator.add]
     final: str
+    eval_feedback: str
+    eval_count: int
     token_usage: Annotated[List[TokenUsage], operator.add]
     images: Annotated[List[ImageResult], operator.add]

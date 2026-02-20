@@ -1,14 +1,24 @@
+import re
 from pathlib import Path
+
 from src.llm import LLM
 from src.models import DiagramSpec, ImageResult, State
 from src.tools.image import get_excalidraw_tools, get_tool_by_name
 from langchain_core.messages import SystemMessage, HumanMessage
 from loguru import logger
 
+MIN_IMAGE_BYTES = 5_000
+_FENCE_RE = re.compile(r"^```(?:mermaid)?\s*\n?", re.MULTILINE)
+_FENCE_END_RE = re.compile(r"\n?```\s*$", re.MULTILINE)
+
+
+def _clean_mermaid(raw: str) -> str:
+    code = _FENCE_RE.sub("", raw)
+    code = _FENCE_END_RE.sub("", code)
+    return code.strip()
+
 
 async def image_generator(state: State) -> dict:
-    """Single node — processes all sections needing images sequentially.
-    Excalidraw MCP has a shared canvas so parallel calls would corrupt each other."""
 
     tasks = state["plan"].tasks
     section_map = {s.title: s.content for s in state["sections"]}
@@ -50,7 +60,8 @@ async def image_generator(state: State) -> dict:
                     - Output ONLY valid Mermaid syntax — no markdown fences
                     - Prefer flowchart for workflows/architectures,
                       sequence for request/response interactions,
-                      class diagram for data structures"""
+                      class diagram for data structures
+                    - alt_text: a brief caption (5-8 words), NOT a paragraph"""
                 ),
                 HumanMessage(
                     content=f"Create a Mermaid diagram for this blog section:\n\n"
@@ -61,18 +72,31 @@ async def image_generator(state: State) -> dict:
             DiagramSpec,
         )
 
-        import re
+        mermaid_code = _clean_mermaid(spec.mermaid_code)
         slug = re.sub(r"[^a-z0-9]+", "_", task.title.lower()).strip("_")
         filename = f"{slug}.png"
         image_path = (output_dir / filename).resolve()
 
-        await clear.ainvoke({})
-        await create.ainvoke({"mermaidDiagram": spec.mermaid_code})
-        await export.ainvoke({"format": "png", "filePath": str(image_path)})
+        try:
+            await clear.ainvoke({})
+            await create.ainvoke({"mermaidDiagram": mermaid_code})
+            await export.ainvoke({"format": "png", "filePath": str(image_path)})
+        except Exception as e:
+            logger.warning(f"MCP tool failed for '{task.title}': {e}, skipping.")
+            continue
 
         if not image_path.exists():
             logger.warning(f"Export did not create file at {image_path}, skipping.")
             continue
+
+        if image_path.stat().st_size < MIN_IMAGE_BYTES:
+            logger.warning(
+                f"Blank image detected for '{task.title}' "
+                f"({image_path.stat().st_size} bytes), skipping."
+            )
+            image_path.unlink()
+            continue
+
         logger.info(f"Saved diagram: {image_path}")
 
         images.append(

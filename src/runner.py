@@ -18,6 +18,12 @@ async def main():
     await app.ainvoke({"topic": topic}, config=config)
 
     state = await app.aget_state(config)
+
+    topic_error = state.values.get("topic_error", "")
+    if topic_error and not state.next:
+        print(f"\nTopic rejected: {topic_error}")
+        return
+
     while state.next:
         interrupt_value = state.tasks[0].interrupts[0].value
         print(f"\n{'='*50}")

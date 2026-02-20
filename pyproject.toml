@@ -8,6 +8,7 @@ dependencies = [
     "langchain-core",
     "python-dotenv",
     "tavily",
-    "loguru"
-    "langchain-mcp-adapters"
+    "loguru",
+    "langchain-mcp-adapters",
+    "streamlit"
 ]
