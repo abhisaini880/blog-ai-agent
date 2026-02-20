@@ -29,7 +29,7 @@ flowchart TD
 
     orchestrator --> plan_review
 
-    plan_review -->|"⏸ awaiting human approval"| plan_review
+    plan_review -->|awaiting human approval| plan_review
     plan_review -->|approved| pre_research
     plan_review -->|rejected + feedback| orchestrator
 
