@@ -20,37 +20,7 @@ Topic: "Event Driven Architecture in Microservices"
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    START((__start__)) --> topic_guard
-
-    topic_guard -->|valid topic| orchestrator
-    topic_guard -->|invalid topic| END((__end__))
-
-    orchestrator --> plan_review
-
-    plan_review -->|awaiting human approval| plan_review
-    plan_review -->|approved| pre_research
-    plan_review -->|rejected + feedback| orchestrator
-
-    pre_research -->|fanout| researcher
-    pre_research -->|no research needed| research_done
-
-    researcher --> research_done
-    research_done -->|fanout| worker
-
-    worker --> image_generator
-    image_generator --> reducer
-    reducer --> evaluator
-
-    evaluator -->|quality ok| END
-    evaluator -->|needs improvement| rewriter
-    rewriter --> evaluator
-
-    style plan_review fill:#fff3cd,stroke:#ffc107
-    style START fill:#e8f5e9,stroke:#4caf50
-    style END fill:#fce4ec,stroke:#e91e63
-```
+![Architecture](docs/images/arch.png)
 
 ## Tech Stack
 
